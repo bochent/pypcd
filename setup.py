@@ -16,8 +16,8 @@ setup_requirements = ['pytest-runner', ]
 test_requirements = ['pytest', ]
 
 setup(
-    author="Daniel Maturana",
-    author_email='dimatura@gmail.com',
+    author="tongbochen",
+    author_email='bochen.tong@outlook.com',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         "Intended Audience :: Science/Research",
@@ -31,18 +31,18 @@ setup(
         'Topic :: Multimedia :: Graphics :: Capture',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion',
     ],
-    description="Read and write PCL .pcd files in python.",
+    description="Read and write PCL .pcd files in python. Forked from https://github.com/dimatura/pypcd/",
     install_requires=requirements,
     license="BSD license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='pypcd2',
     name='pypcd2',
-    packages=find_packages(include=['pypcd'], exclude=['*/test_data', '*/tests']),
+    packages=find_packages(include=['pypcd2']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/bochent/pypcd',
-    version='0.2.0',
+    url='https://github.com/bochent/pypcd2/',
+    version='0.2.1',
     zip_safe=False,
 )

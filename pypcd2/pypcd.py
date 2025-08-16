@@ -9,21 +9,15 @@ dimatura@cmu.edu, 2013-2018
 - TODO better support for rgb nonsense
 """
 
+import copy
 import re
 import struct
-import copy
-from io import BytesIO as sio
-# import cStringIO as sio
-import numpy as np
 import warnings
-import lzf
+from io import BytesIO as sio
 
-HAS_SENSOR_MSGS = True
-try:
-    from sensor_msgs.msg import PointField
-    import numpy_pc2  # needs sensor_msgs
-except ImportError:
-    HAS_SENSOR_MSGS = False
+import lzf
+import numpy as np
+
 
 __all__ = ['PointCloud',
            'point_cloud_to_path',
@@ -48,19 +42,6 @@ __all__ = ['PointCloud',
            'pcd_type_to_numpy_type',
            'numpy_type_to_pcd_type',
            ]
-
-if HAS_SENSOR_MSGS:
-    pc2_pcd_type_mappings = [(PointField.INT8, ('I', 1)),
-                             (PointField.UINT8, ('U', 1)),
-                             (PointField.INT16, ('I', 2)),
-                             (PointField.UINT16, ('U', 2)),
-                             (PointField.INT32, ('I', 4)),
-                             (PointField.UINT32, ('U', 4)),
-                             (PointField.FLOAT32, ('F', 4)),
-                             (PointField.FLOAT64, ('F', 8))]
-    pc2_type_to_pcd_type = dict(pc2_pcd_type_mappings)
-    pcd_type_to_pc2_type = dict((q, p) for (p, q) in pc2_pcd_type_mappings)
-    __all__.extend(['pcd_type_to_pc2_type', 'pc2_type_to_pcd_type'])
 
 numpy_pcd_type_mappings = [(np.dtype('float32'), ('F', 4)),
                            (np.dtype('float64'), ('F', 8)),
@@ -686,7 +667,7 @@ class PointCloud(object):
         md = self.get_metadata()
         assert(_metadata_is_consistent(md))
         assert(len(self.pc_data) == self.points)
-#         assert(self.width*self.height == self.points)
+        # assert(self.width*self.height == self.points)
         assert(len(self.fields) == len(self.count))
         assert(len(self.fields) == len(self.type))
 
@@ -729,12 +710,6 @@ class PointCloud(object):
         new_metadata = self.get_metadata()
         return PointCloud(new_metadata, new_pc_data)
 
-    def to_msg(self):
-        if not HAS_SENSOR_MSGS:
-            raise Exception('ROS sensor_msgs not found')
-        # TODO is there some metadata we want to attach?
-        return numpy_pc2.array_to_pointcloud2(self.pc_data)
-
     @staticmethod
     def from_path(fname):
         return point_cloud_from_path(fname)
@@ -775,35 +750,3 @@ class PointCloud(object):
         pc = PointCloud(md, pc_data)
         return pc
 
-    @staticmethod
-    def from_msg(msg, squeeze=True):
-        """ from pointcloud2 msg
-        squeeze: fix when clouds get 1 as first dim
-        """
-        if not HAS_SENSOR_MSGS:
-            raise NotImplementedError('ROS sensor_msgs not found')
-        md = {'version': .7,
-              'fields': [],
-              'size': [],
-              'count': [],
-              'width': msg.width,
-              'height': msg.height,
-              'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-              'points': 0,
-              'type': [],
-              'data': 'binary_compressed'}
-        for field in msg.fields:
-            md['fields'].append(field.name)
-            t, s = pc2_type_to_pcd_type[field.datatype]
-            md['type'].append(t)
-            md['size'].append(s)
-            # TODO handle multicount correctly
-            if field.count > 1:
-                warnings.warn('fields with count > 1 are not well tested')
-            md['count'].append(field.count)
-        pc_array = numpy_pc2.pointcloud2_to_array(msg)
-        pc_data = pc_array.reshape(-1)
-        md['height'], md['width'] = pc_array.shape
-        md['points'] = len(pc_data)
-        pc = PointCloud(md, pc_data)
-        return pc
