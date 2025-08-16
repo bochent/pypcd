@@ -1,6 +1,6 @@
 .*.swp
 *.pyc
-pypcd.egg-info
+*.egg-info
 build
 .eggs/
 dist
